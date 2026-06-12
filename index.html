@@ -61,6 +61,9 @@
   .dot{width:20px; height:20px; border-radius:50%; border:1px solid #3A3A3C; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--bg); font-size:12px;}
   .dot.on{background:var(--gold); border-color:var(--gold);}
   .empty{font-family:var(--serif); font-style:italic; font-size:15px; color:var(--mut-2); line-height:1.5; padding:16px 0;}
+  .msg{max-width:84%; padding:11px 14px; border-radius:14px; font-size:15px; line-height:1.45; white-space:pre-wrap; word-wrap:break-word;}
+  .msg.me{align-self:flex-end; background:#15130E; border:1px solid #3A3320; color:#F3EFE3;}
+  .msg.ai{align-self:flex-start; background:var(--card); border:1px solid var(--card-line); color:var(--ink-soft);}
   .addrow{display:flex; align-items:center; gap:10px; margin-top:18px;}
   input.text, textarea.text{
     width:100%; background:#0E0E10; border:1px solid var(--card-line); border-radius:12px;
@@ -112,6 +115,7 @@
       <span id="homeClk" class="date" style="margin:0;">7:14</span>
       <span class="mark">CREATE</span>
       <div style="display:flex; gap:4px;">
+        <button class="icbtn" id="chatBtn" aria-label="Companion"><i class="ti ti-message-circle"></i></button>
         <button class="icbtn" id="soundBtn" aria-label="Sound"><i class="ti ti-volume-3"></i></button>
         <button class="icbtn" id="gearBtn" aria-label="Settings"><i class="ti ti-settings"></i></button>
       </div>
@@ -169,8 +173,33 @@
       <button class="chip" id="setEn">English</button>
       <button class="chip" id="setEs">Español</button>
     </div>
+    <div class="sect" id="setAiLbl">AI companion</div>
+    <input class="text" id="setKey" type="password" autocomplete="off" placeholder="Anthropic API key (sk-ant-…)" style="margin-bottom:10px;" />
+    <div style="font-size:12px; color:var(--mut-2); line-height:1.5; margin-bottom:14px;" id="setKeyHint">Your key is stored only on this device.</div>
+    <div class="chips" id="setModelChips" style="margin-bottom:30px;">
+      <button class="chip" data-m="claude-opus-4-8">Opus</button>
+      <button class="chip" data-m="claude-sonnet-4-6">Sonnet</button>
+      <button class="chip" data-m="claude-haiku-4-5">Haiku</button>
+    </div>
     <div class="spacer"></div>
     <button class="ghost" id="setReset" style="align-self:flex-start; color:#C16B5C; border-color:#3a2422;">Start over</button>
+  </section>
+
+  <section class="screen" id="scr-chat">
+    <div class="bar" style="justify-content:flex-start; gap:10px;">
+      <button class="icbtn" id="chatBack" aria-label="Back"><i class="ti ti-chevron-left" style="font-size:20px;"></i></button>
+      <span class="mark">CREATE</span>
+      <button class="icbtn" id="chatClear" aria-label="Clear" style="margin-left:auto;"><i class="ti ti-eraser"></i></button>
+    </div>
+    <div id="chatLog" style="flex:1; display:flex; flex-direction:column; gap:12px; overflow-y:auto; padding-bottom:8px;"></div>
+    <div id="chatNokey" style="display:none; text-align:center; padding:24px 8px;">
+      <div class="ethos" id="chatNokeyMsg" style="margin-bottom:18px;">Add your Anthropic key in settings to wake your companion.</div>
+      <button class="ghost" id="chatToSettings">Open settings</button>
+    </div>
+    <form class="addrow" id="chatForm" style="margin-top:10px;">
+      <input class="text" id="chatInput" autocomplete="off" placeholder="Say something…" />
+      <button class="add" type="submit" aria-label="Send"><i class="ti ti-arrow-up"></i></button>
+    </form>
   </section>
 
   <div class="toast" id="toast"><span id="toastTxt"></span></div>
@@ -199,7 +228,12 @@
       add_ph:"What will you create?", first_step:"Take one real step toward your dream",
       now:"Now", begin:"Begin", pause:"Pause", resume:"Resume", complete:"Mark complete", well_done:"Well done.",
       settings:"Settings", language:"Language", start_over:"Start over",
-      reset_confirm:"This erases everything and restarts the Initiation. Continue?"
+      reset_confirm:"This erases everything and restarts the Initiation. Continue?",
+      ai_companion:"AI companion", key_ph:"Anthropic API key (sk-ant-…)",
+      key_hint:"Your key is stored only on this device and used to talk to Claude directly. Get one at console.anthropic.com.",
+      chat_ph:"Say something…", chat_nokey:"Add your Anthropic key in settings to wake your companion.",
+      open_settings:"Open settings", chat_err_key:"That API key didn't work. Check it in settings.",
+      chat_err_rate:"Too many requests right now — give it a moment.", chat_err_generic:"I couldn't reach Claude just now. Try again in a moment."
     },
     es:{
       continue:"Continuar", lang_q:"Elige tu idioma", lang_sub:"Puedes cambiarlo cuando quieras.",
@@ -221,11 +255,19 @@
       add_ph:"¿Qué vas a crear?", first_step:"Da un paso real hacia tu sueño",
       now:"Ahora", begin:"Comenzar", pause:"Pausar", resume:"Continuar", complete:"Marcar como hecho", well_done:"Bien hecho.",
       settings:"Ajustes", language:"Idioma", start_over:"Empezar de nuevo",
-      reset_confirm:"Esto borra todo y reinicia la Iniciación. ¿Continuar?"
+      reset_confirm:"Esto borra todo y reinicia la Iniciación. ¿Continuar?",
+      ai_companion:"Compañero IA", key_ph:"Clave API de Anthropic (sk-ant-…)",
+      key_hint:"Tu clave se guarda solo en este dispositivo y se usa para hablar con Claude directamente. Consigue una en console.anthropic.com.",
+      chat_ph:"Escribe algo…", chat_nokey:"Agrega tu clave de Anthropic en ajustes para despertar a tu compañero.",
+      open_settings:"Abrir ajustes", chat_err_key:"Esa clave no funcionó. Revísala en ajustes.",
+      chat_err_rate:"Demasiadas solicitudes ahora — espera un momento.", chat_err_generic:"No pude conectar con Claude ahora. Inténtalo de nuevo en un momento."
     }
   };
   var KEY = "create.state.v1";
-  var state = load() || { onboarded:false, lang:"en", soundOn:false, profile:{}, tasks:[], current:null };
+  var state = load() || { onboarded:false, lang:"en", soundOn:false, profile:{}, tasks:[], current:null, apiKey:"", model:"claude-opus-4-8", chat:[] };
+  if(!state.chat) state.chat = [];
+  if(!state.model) state.model = "claude-opus-4-8";
+  if(state.apiKey == null) state.apiKey = "";
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch(e){ return null; } }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
   function t(k){ var L = DICT[state.lang] || DICT.en; return (k in L) ? L[k] : (DICT.en[k] || k); }
@@ -468,12 +510,136 @@
     el("setReset").textContent = t("start_over");
     el("setEn").classList.toggle("sel", state.lang === "en");
     el("setEs").classList.toggle("sel", state.lang === "es");
+    el("setAiLbl").textContent = t("ai_companion");
+    el("setKey").placeholder = t("key_ph");
+    el("setKey").value = state.apiKey || "";
+    el("setKeyHint").textContent = t("key_hint");
+    Array.prototype.forEach.call(el("setModelChips").querySelectorAll(".chip"), function(c){
+      c.classList.toggle("sel", c.getAttribute("data-m") === state.model);
+    });
   }
   el("setEn").addEventListener("click", function(){ state.lang = "en"; save(); renderSettings(); });
   el("setEs").addEventListener("click", function(){ state.lang = "es"; save(); renderSettings(); });
+  el("setKey").addEventListener("input", function(){ state.apiKey = el("setKey").value.trim(); save(); });
+  Array.prototype.forEach.call(el("setModelChips").querySelectorAll(".chip"), function(c){
+    c.addEventListener("click", function(){ state.model = c.getAttribute("data-m"); save(); renderSettings(); });
+  });
   el("setBack").addEventListener("click", function(){ renderHome(); show("scr-home"); });
   el("setReset").addEventListener("click", function(){
     if(confirm(t("reset_confirm"))){ localStorage.removeItem(KEY); location.reload(); }
+  });
+
+  /* ---------- Companion (AI chat) ---------- */
+  var chatBusy = false;
+  function companionSystem(){
+    var p = state.profile || {};
+    var lang = state.lang === "es" ? "Spanish (Español)" : "English";
+    return [
+      "You are the companion inside Create, a premium app whose whole purpose is to help people create more, consume less, and never give up on their dreams.",
+      "Speak with calm warmth and quiet confidence, like a wise friend who truly believes in them. Never preachy, never empty hype.",
+      "Ground replies in who they are. Name: " + (p.name || "friend") + ". Their dream: " + (p.dream || "(not set yet)") + ". Why it matters: " + (p.why || "(not set yet)") + ". They are becoming someone who " + (p.identity || "creates") + ". What steals their time: " + (p.thief || "(not set yet)") + ".",
+      "When they drift or doubt, gently point them to one small real act of creation toward their dream and remind them of that identity — behavior and identity, not slogans.",
+      "Keep replies short and human, usually 2 to 5 sentences. Ask a question when it helps them move forward.",
+      (p.tone === "push" ? "They asked to be pushed: be firm and direct when they make excuses." : "They asked for a gentle nudge: be soft and encouraging."),
+      "Always respond in " + lang + "."
+    ].join("\n");
+  }
+  function scrollChat(){ var l = el("chatLog"); l.scrollTop = l.scrollHeight; }
+  function appendMsg(role, text){
+    var d = document.createElement("div");
+    d.className = "msg " + (role === "user" ? "me" : "ai");
+    d.textContent = text;
+    el("chatLog").appendChild(d); scrollChat(); return d;
+  }
+  function renderChat(){
+    var hasKey = !!(state.apiKey && state.apiKey.length);
+    el("chatNokey").style.display = hasKey ? "none" : "block";
+    el("chatForm").style.display = hasKey ? "flex" : "none";
+    el("chatNokeyMsg").textContent = t("chat_nokey");
+    el("chatToSettings").textContent = t("open_settings");
+    el("chatInput").placeholder = t("chat_ph");
+    var log = el("chatLog"); log.innerHTML = "";
+    state.chat.forEach(function(m){ appendMsg(m.role, m.content); });
+    scrollChat();
+  }
+  function openChat(){
+    if(state.apiKey && state.chat.length === 0){
+      var nm = (state.profile.name || "friend");
+      var greet = state.lang === "es"
+        ? "Estoy aquí contigo, " + nm + ". ¿Qué vamos a crear hoy — o qué te está alejando de ello?"
+        : "I'm here with you, " + nm + ". What are we creating today — or what's pulling you away from it?";
+      state.chat.push({ role: "assistant", content: greet }); save();
+    }
+    renderChat(); show("scr-chat");
+    if(state.apiKey){ setTimeout(function(){ el("chatInput").focus(); }, 520); }
+  }
+  function chatErr(status){
+    if(status === 401 || status === 403) return t("chat_err_key");
+    if(status === 429) return t("chat_err_rate");
+    return t("chat_err_generic");
+  }
+  async function streamClaude(){
+    if(!state.apiKey || chatBusy) return;
+    chatBusy = true;
+    var bubble = appendMsg("assistant", "…");
+    var acc = "";
+    try {
+      var res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": state.apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: state.model || "claude-opus-4-8",
+          max_tokens: 1024,
+          system: companionSystem(),
+          stream: true,
+          messages: state.chat.map(function(m){ return { role: m.role, content: m.content }; })
+        })
+      });
+      if(!res.ok){ bubble.textContent = chatErr(res.status); chatBusy = false; return; }
+      var reader = res.body.getReader();
+      var dec = new TextDecoder();
+      var buf = "";
+      while(true){
+        var chunk = await reader.read();
+        if(chunk.done) break;
+        buf += dec.decode(chunk.value, { stream: true });
+        var lines = buf.split("\n");
+        buf = lines.pop();
+        for(var i = 0; i < lines.length; i++){
+          var line = lines[i];
+          if(line.indexOf("data:") !== 0) continue;
+          var data = line.slice(5).trim();
+          if(!data || data === "[DONE]") continue;
+          try {
+            var evt = JSON.parse(data);
+            if(evt.type === "content_block_delta" && evt.delta && evt.delta.type === "text_delta"){
+              acc += evt.delta.text; bubble.textContent = acc; scrollChat();
+            }
+          } catch(e){}
+        }
+      }
+    } catch(e){ bubble.textContent = t("chat_err_generic"); chatBusy = false; return; }
+    if(acc){ state.chat.push({ role: "assistant", content: acc }); save(); }
+    else { bubble.textContent = t("chat_err_generic"); }
+    chatBusy = false;
+  }
+  el("chatBtn").addEventListener("click", openChat);
+  el("chatBack").addEventListener("click", function(){ renderHome(); show("scr-home"); });
+  el("chatToSettings").addEventListener("click", function(){ renderSettings(); show("scr-settings"); });
+  el("chatClear").addEventListener("click", function(){ state.chat = []; save(); openChat(); });
+  el("chatForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var v = el("chatInput").value.trim();
+    if(!v || chatBusy) return;
+    state.chat.push({ role: "user", content: v }); save();
+    appendMsg("user", v);
+    el("chatInput").value = "";
+    streamClaude();
   });
 
   /* ---------- Audio engine ---------- */
