@@ -1,0 +1,12 @@
+{
+  "name": "create-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Create — the daily app for people building their dreams",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
